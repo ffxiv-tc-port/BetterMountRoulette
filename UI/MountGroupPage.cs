@@ -39,7 +39,7 @@ internal sealed class MountGroupPage
     {
         if (group is null)
         {
-            ImGui.Text("Group is null!"u8);
+            ImGui.Text("找不到坐騎群組！"u8);
             return;
         }
 
@@ -49,7 +49,7 @@ internal sealed class MountGroupPage
 
         ImGui.GetStateStorage().SetInt(ImGui.GetID("Settings"u8), isSettingsOpen ? 1 : 0);
         ImGui.BeginDisabled(isSettingsOpen);
-        if (ImGui.CollapsingHeader("Settings"u8))
+        if (ImGui.CollapsingHeader("設定##Settings"u8))
         {
             ImGui.EndDisabled();
             isSettingsOpen = true;
@@ -65,14 +65,14 @@ internal sealed class MountGroupPage
 
         ImGui.GetStateStorage().SetInt(ImGui.GetID("Mounts"u8), isMountsOpen ? 1 : 0);
         ImGui.BeginDisabled(isMountsOpen);
-        if (ImGui.CollapsingHeader("Mounts"u8))
+        if (ImGui.CollapsingHeader("坐騎##Mounts"u8))
         {
             ImGui.EndDisabled();
             isMountsOpen = true;
             int pages = MountRenderer.GetPageCount(_plugin.MountRegistry.UnlockedMountCount);
             if (pages == 0)
             {
-                ImGui.Text("Please unlock at least one mount."u8);
+                ImGui.Text("請至少解鎖一隻坐騎。"u8);
             }
             else if (ImGui.BeginTabBar("mount_pages"u8))
             {
@@ -119,27 +119,27 @@ internal sealed class MountGroupPage
         int currentPage = page;
         (bool Select, int? Page)? maybeInfo = null;
 
-        Button("Select all"u8, ref maybeInfo, (true, null));
+        Button("全部選取"u8, ref maybeInfo, (true, null));
         ImGui.SameLine();
-        Button("Unselect all"u8, ref maybeInfo, (false, null));
+        Button("全部取消選取"u8, ref maybeInfo, (false, null));
         ImGui.SameLine();
-        Button("Select page"u8, ref maybeInfo, (true, page));
+        Button("選取此頁"u8, ref maybeInfo, (true, page));
         ImGui.SameLine();
-        Button("Unselect page"u8, ref maybeInfo, (false, page));
+        Button("取消選取此頁"u8, ref maybeInfo, (false, page));
 
         if (maybeInfo is { } info)
         {
-            string selectText = info.Select ? "select" : "unselect";
+            string selectText = info.Select ? "選取" : "取消選取";
             string pageInfo = (info.Page, info.Select) switch
             {
-                (null, true) => "currently unselected mounts",
-                (null, false) => "currently selected mounts",
-                _ => "mounts on the current page",
+                (null, true) => "目前未選取的坐騎",
+                (null, false) => "目前已選取的坐騎",
+                _ => "目前頁面上的坐騎",
             };
 
             _plugin.WindowManager.ConfirmYesNo(
-                "Are you sure?",
-                $"Do you really want to {selectText} all {pageInfo}?",
+                "確定嗎？",
+                $"確定要{selectText}所有{pageInfo}嗎？",
                 () => MountRenderer.Update(
                     _plugin.MountRegistry.GetUnlockedMounts(),
                     group,
@@ -169,66 +169,65 @@ internal sealed class MountGroupPage
         bool fastModeAlways = group.FastMode == FastMode.On;
         RouletteDisplayType displayType = group.DisplayType;
 
-        _ = ImGui.Checkbox("Enable new mounts on unlock", ref enableNewMounts);
+        _ = ImGui.Checkbox("解鎖新坐騎時自動啟用", ref enableNewMounts);
 
-        _ = ImGui.Checkbox("Use only multi-seated mounts in parties"u8, ref forceMultiseatersInParty);
-        ControlHelper.Tooltip("Has no effect on cross-world parties, since those don't allow riding pillion."u8);
+        _ = ImGui.Checkbox("組隊時只使用多人坐騎"u8, ref forceMultiseatersInParty);
+        ControlHelper.Tooltip("跨界隊伍無法共乘，因此此選項不會生效。"u8);
 
         ImGui.Indent();
         ImGui.BeginDisabled(!forceMultiseatersInParty);
-        _ = ImGui.Checkbox("Prefer mounts that can accomodate more party members"u8, ref preferMoreSeats);
+        _ = ImGui.Checkbox("優先使用可搭載較多隊員的坐騎"u8, ref preferMoreSeats);
         ImGui.EndDisabled();
         ImGui.Unindent();
 
-        ControlHelper.Tooltip("Requires the random mount to accomodate the largest number of current party members possible."u8);
+        ControlHelper.Tooltip("隨機坐騎必須能容納目前隊伍中盡可能多的成員。"u8);
 
-        _ = ImGui.Checkbox("Use only single-seated mounts while solo"u8, ref forceSingleSeatersWhileSolo);
-        ControlHelper.Tooltip("Also applies while in a cross-world party."u8);
+        _ = ImGui.Checkbox("單人時只使用單人坐騎"u8, ref forceSingleSeatersWhileSolo);
+        ControlHelper.Tooltip("在跨界隊伍中也會套用。"u8);
 
-        _ = ImGui.Checkbox("Use different settings for PvP (Frontline and Rival Wings)"u8, ref pvpOverride);
+        _ = ImGui.Checkbox("PvP（紛爭前線與烈羽爭鋒）使用不同設定"u8, ref pvpOverride);
         ImGui.Indent();
         ImGui.BeginDisabled(!pvpOverride);
         ImGui.PushID(1);
-        _ = ImGui.Checkbox("Use only multi-seated mounts in parties"u8, ref pvpForceMultiseatersInParty);
+        _ = ImGui.Checkbox("組隊時只使用多人坐騎"u8, ref pvpForceMultiseatersInParty);
 
         ImGui.Indent();
         ImGui.BeginDisabled(!pvpForceMultiseatersInParty);
-        _ = ImGui.Checkbox("Prefer mounts that can accomodate more party members"u8, ref pvpPreferMoreSeats);
+        _ = ImGui.Checkbox("優先使用可搭載較多隊員的坐騎"u8, ref pvpPreferMoreSeats);
         ImGui.EndDisabled();
         ImGui.Unindent();
 
-        _ = ImGui.Checkbox("Use only single-seated mounts while solo"u8, ref pvpForceSingleSeatersWhileSolo);
+        _ = ImGui.Checkbox("單人時只使用單人坐騎"u8, ref pvpForceSingleSeatersWhileSolo);
 
         ImGui.PopID();
         ImGui.EndDisabled();
         ImGui.Unindent();
 
-        _ = ImGui.Checkbox("Use highest ground speed mount"u8, ref fastMode);
+        _ = ImGui.Checkbox("使用地面速度最快的坐騎"u8, ref fastMode);
 
         if (ControlHelper.BeginTooltip())
         {
             string GetFastMountsText()
             {
-                return $"Limits mount selection to {string.Join("/", _plugin.MountRegistry.GetFastMountNames())} in areas where increased";
+                return $"在可提高坐騎速度的區域，將坐騎限制為 {string.Join("/", _plugin.MountRegistry.GetFastMountNames())}，";
             }
 
             ImGui.Text(StringCache.Named["FastMountsText", GetFastMountsText]);
-            ImGui.Text("mount speed is available unless at least the first enhanced level of mount"u8);
-            ImGui.Text("speed or flying is unlocked."u8);
-            ImGui.Text("Requires at least one of these mounts to be unlocked and active to take effect."u8);
+            ImGui.Text("除非已解鎖至少第一階段的坐騎速度強化或飛行。"u8);
+            ImGui.Text("至少要解鎖並啟用其中一隻坐騎才會生效。"u8);
             ImGui.EndTooltip();
         }
 
         ImGui.Indent();
         ImGui.BeginDisabled(!fastMode);
-        _ = ImGui.Checkbox("Always use highest ground speed mount even if flight is unlocked"u8, ref fastModeAlways);
+        _ = ImGui.Checkbox("即使已解鎖飛行，仍一律使用地面速度最快的坐騎"u8, ref fastModeAlways);
         ImGui.EndDisabled();
         ImGui.Unindent();
 
-        ControlHelper.Tooltip("Limits mount selection regardless of flying unlock status."u8);
+        ControlHelper.Tooltip("不論是否解鎖飛行，皆限制坐騎選擇。"u8);
 
         ImGui.AlignTextToFramePadding();
-        ImGui.Text("/pmount Behavior:"u8);
+        ImGui.Text("/pmount 顯示方式："u8);
         ImGui.SameLine();
         SelectDisplayType(ref displayType);
 
@@ -266,9 +265,9 @@ internal sealed class MountGroupPage
         {
             return displayType switch
             {
-                RouletteDisplayType.Grounded => "Show as Mount Roulette"u8,
-                RouletteDisplayType.Flying => "Show as Flying Mount Roulette"u8,
-                RouletteDisplayType.Show => "Reveal mount during cast"u8,
+                RouletteDisplayType.Grounded => "顯示為坐騎隨機召喚"u8,
+                RouletteDisplayType.Flying => "顯示為飛行坐騎隨機召喚"u8,
+                RouletteDisplayType.Show => "詠唱期間顯示坐騎"u8,
                 _ => StringCache.Named[$"RouletteDisplayType_{displayType}", displayType.ToString],
             };
         }
@@ -302,45 +301,45 @@ internal sealed class MountGroupPage
 
         string currentGroup = _currentMountGroup;
         ImGui.SameLine();
-        if (ImGui.Button("Add"u8))
+        if (ImGui.Button("新增"u8))
         {
             var dialog = new RenameItemDialog(
-                "Add a new group",
+                "新增群組",
                 string.Empty,
                 x => AddMountGroup(characterConfig, x))
             {
                 NormalizeWhitespace = true
             };
 
-            dialog.SetValidation(x => ValidateGroup(x, isNew: true), x => "A group with that name already exists."u8);
+            dialog.SetValidation(x => ValidateGroup(x, isNew: true), x => "已有同名群組。"u8);
             _plugin.WindowManager.OpenDialog(dialog);
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Edit"))
+        if (ImGui.Button("編輯"))
         {
             var dialog = new RenameItemDialog(
-                $"Rename {_currentMountGroup}",
+                $"重新命名 {_currentMountGroup}",
                 _currentMountGroup,
                 (newName) => RenameMountGroup(_currentMountGroup, newName))
             {
                 NormalizeWhitespace = true
             };
 
-            dialog.SetValidation(x => ValidateGroup(x, isNew: false), x => "Another group with that name already exists."u8);
+            dialog.SetValidation(x => ValidateGroup(x, isNew: false), x => "已有其他同名群組。"u8);
 
             _plugin.WindowManager.OpenDialog(dialog);
         }
 
         ImGui.SameLine();
         ImGui.BeginDisabled(!characterConfig.HasNonDefaultGroups);
-        if (ImGui.Button("Delete"))
+        if (ImGui.Button("刪除"))
         {
             _plugin.WindowManager.Confirm(
-                "Confirm deletion of mount group",
-                $"Are you sure you want to delete {currentGroup}?\nThis action can NOT be undone.",
-                ("OK", () => DeleteMountGroup(currentGroup)),
-                "Cancel");
+                "確認刪除坐騎群組",
+                $"確定要刪除 {currentGroup} 嗎？\n此操作無法復原。",
+                ("確定", () => DeleteMountGroup(currentGroup)),
+                "取消");
         }
 
         ImGui.EndDisabled();

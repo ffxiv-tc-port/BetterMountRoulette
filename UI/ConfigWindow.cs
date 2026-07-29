@@ -23,7 +23,7 @@ internal sealed class ConfigWindow : Window
 
     private static (uint RowId, string Name)[]? _mainCommands;
 
-    public ConfigWindow(BetterMountRoulettePlugin plugin, PluginServices services) : base("Better Mount Roulette", ImGuiWindowFlags.AlwaysAutoResize)
+    public ConfigWindow(BetterMountRoulettePlugin plugin, PluginServices services) : base("Better Mount Roulette 設定", ImGuiWindowFlags.AlwaysAutoResize)
     {
         _plugin = plugin;
         _services = services;
@@ -61,13 +61,13 @@ internal sealed class ConfigWindow : Window
     {
         if (_plugin.CharacterConfig is not CharacterConfig characterConfig)
         {
-            ImGui.Text("Please log in first"u8);
+            ImGui.Text("請先登入角色"u8);
         }
         else if (ImGui.BeginTabBar("settings"u8))
         {
-            Tab("General"u8, GeneralConfigTab);
-            Tab("Mount Groups"u8, _mountGroupPage.RenderPage);
-            Tab("Character Management"u8, x => _charManagementRenderer.Draw());
+            Tab("一般"u8, GeneralConfigTab);
+            Tab("坐騎群組"u8, _mountGroupPage.RenderPage);
+            Tab("角色管理"u8, x => _charManagementRenderer.Draw());
 
             ImGui.EndTabBar();
 
@@ -104,12 +104,12 @@ internal sealed class ConfigWindow : Window
         RouletteGroup(characterConfig, ref mountRouletteGroupName, ref revealMountsNormal);
         RouletteGroup(characterConfig, ref flyingRouletteGroupName, ref revealMountsFlying, isFlying: true);
 
-        ImGui.Text("For an override to take effect, the selected group has to enable at least one mount."u8);
+        ImGui.Text("選定的群組至少要啟用一隻坐騎，取代設定才會生效。"u8);
 
         EnableFlyingRouletteButtonCheckbox(characterConfig);
 
         bool suppressChatErrors = characterConfig.SuppressChatErrors;
-        _ = ImGui.Checkbox("Suppress error messages in chat"u8, ref suppressChatErrors);
+        _ = ImGui.Checkbox("不在聊天欄顯示錯誤訊息"u8, ref suppressChatErrors);
 
         characterConfig.MountRouletteGroup = mountRouletteGroupName;
         characterConfig.FlyingMountRouletteGroup = flyingRouletteGroupName;
@@ -124,7 +124,7 @@ internal sealed class ConfigWindow : Window
     private void EnableFlyingRouletteButtonCheckbox(CharacterConfig characterConfig)
     {
         bool enableFlyingRouletteButton = characterConfig.EnableFlyingRouletteButton;
-        if (ImGui.Checkbox("Re-enable Flying Mount Roulette button"u8, ref enableFlyingRouletteButton))
+        if (ImGui.Checkbox("重新啟用「飛行坐騎隨機召喚」按鈕"u8, ref enableFlyingRouletteButton))
         {
             characterConfig.EnableFlyingRouletteButton = enableFlyingRouletteButton;
             _ = _services.Framework.RunOnFrameworkThread(() => _services.GameFunctions.ToggleFlyingRouletteButton(enableFlyingRouletteButton));
@@ -141,7 +141,7 @@ internal sealed class ConfigWindow : Window
             {
                 ImGui.BeginTooltip();
 
-                ImGui.Text("Flying Mount Roulette is available from the "u8);
+                ImGui.Text("「飛行坐騎隨機召喚」可從「"u8);
                 ImGui.SameLine();
                 for (int i = 0; i < _mainCommands.Length; i++)
                 {
@@ -150,12 +150,12 @@ internal sealed class ConfigWindow : Window
 
                     if (i < _mainCommands.Length - 1)
                     {
-                        ImGui.Text(" and "u8);
+                        ImGui.Text("」與「"u8);
                         ImGui.SameLine();
                     }
                 }
 
-                ImGui.Text(" windows"u8);
+                ImGui.Text("」視窗使用"u8);
                 ImGui.EndTooltip();
             }
 
@@ -188,7 +188,7 @@ internal sealed class ConfigWindow : Window
 
                 SelectRouletteGroup(characterConfig, ref groupName, isFlying);
 
-                _ = ImGui.Checkbox("Reveal mount in cast bar"u8, ref show);
+                _ = ImGui.Checkbox("在詠唱欄顯示坐騎"u8, ref show);
 
                 ImGui.EndTable();
             }
@@ -208,7 +208,7 @@ internal sealed class ConfigWindow : Window
     {
         bool isEnabled = groupName is not null;
 
-        _ = ImGui.Checkbox("Replace with mount group"u8, ref isEnabled);
+        _ = ImGui.Checkbox("改用坐騎群組"u8, ref isEnabled);
 
         if (isEnabled)
         {

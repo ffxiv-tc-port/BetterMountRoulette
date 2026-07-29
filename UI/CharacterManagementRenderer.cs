@@ -31,7 +31,7 @@ internal sealed class CharacterManagementRenderer(
     {
         RenderNewCharacterHandling();
 
-        ImGui.Text("Existing characters"u8);
+        ImGui.Text("現有角色"u8);
         if (!ImGui.BeginListBox("##Characters"u8))
         {
             return;
@@ -56,40 +56,40 @@ internal sealed class CharacterManagementRenderer(
         ImGui.EndListBox();
         ImGui.BeginDisabled(_currentCharacter is null || _currentCharacter == _services.ClientState.LocalContentId);
 
-        if (ImGui.Button("Import"))
+        if (ImGui.Button("匯入"))
         {
             Debug.Assert(_currentCharacter is not null);
             ulong currentCharacter = _currentCharacter.Value;
             _windowManager.Confirm(
-                "Import settings?",
-                $"Import settings from {Encoding.UTF8.GetString(selectedCharacterName)}? This will overwrite all settings for this character!",
-                ("Confirm", () => ImportFromCharacter(currentCharacter)),
-                "Cancel");
+                "匯入設定？",
+                $"要從 {Encoding.UTF8.GetString(selectedCharacterName)} 匯入設定嗎？這會覆寫此角色的所有設定！",
+                ("確認", () => ImportFromCharacter(currentCharacter)),
+                "取消");
         }
 
         ImGui.SameLine();
 
         ImGui.BeginDisabled(_currentCharacter == Configuration.DUMMY_LEGACY_CONFIG_ID);
-        if (ImGui.Button("Delete"))
+        if (ImGui.Button("刪除"))
         {
             Debug.Assert(_currentCharacter is not null);
             ulong currentCharacter = _currentCharacter.Value;
             _windowManager.Confirm(
-                "Delete settings?",
-                $"Delete settings for {Encoding.UTF8.GetString(selectedCharacterName)}? This action cannot be undone!",
-                ("Confirm", () => DeleteCharacter(currentCharacter)),
-                "Cancel");
+                "刪除設定？",
+                $"要刪除 {Encoding.UTF8.GetString(selectedCharacterName)} 的設定嗎？此操作無法復原！",
+                ("確認", () => DeleteCharacter(currentCharacter)),
+                "取消");
         }
 
         if (_currentCharacter == Configuration.DUMMY_LEGACY_CONFIG_ID)
         {
             ImGui.SameLine();
-            ImGui.Text("This configuration cannot be deleted."u8);
+            ImGui.Text("此設定無法刪除。"u8);
         }
         else if (_currentCharacter == _services.ClientState.LocalContentId)
         {
             ImGui.SameLine();
-            ImGui.Text("You cannot import from or delete the currently active character."u8);
+            ImGui.Text("無法從目前使用中的角色匯入或刪除設定。"u8);
         }
 
         ImGui.EndDisabled();
@@ -104,7 +104,7 @@ internal sealed class CharacterManagementRenderer(
 
         if (_configuration.CharacterConfigs.ContainsKey(Configuration.DUMMY_LEGACY_CONFIG_ID))
         {
-            ReadOnlySpan<byte> text = "New characters: "u8;
+            ReadOnlySpan<byte> text = "新角色："u8;
             Vector2 offset = ImGui.CalcTextSize(text);
             float posX = ImGui.GetCursorPosX();
             ImGui.SetCursorPosX(posX + offset.X);
@@ -126,7 +126,7 @@ internal sealed class CharacterManagementRenderer(
             ImGui.SetCursorPosX(posX);
             ImGui.Text(text);
 
-            ImGui.Text("Modes:");
+            ImGui.Text("模式：");
             ImGui.Text(StringCache.Named["NewCharacterImport", () => CharacterHandlingModeExplanation(IMPORT)]);
             ImGui.Text(StringCache.Named["NewCharacterBlank", () => CharacterHandlingModeExplanation(BLANK)]);
             ImGui.Text(StringCache.Named["NewCharacterAsk", () => CharacterHandlingModeExplanation(ASK)]);
@@ -156,9 +156,9 @@ internal sealed class CharacterManagementRenderer(
             ReadOnlySpan<byte> part2 = GetCharacterHandlingModeText(characterHandlingMode);
             ReadOnlySpan<byte> part3 = characterHandlingMode switch
             {
-                BLANK => ": For new characters, create empty settings profile."u8,
-                IMPORT => ": For new characters, import legacy data on first login."u8,
-                ASK or _ => ": Ask whether to import or not for each character individually."u8,
+                BLANK => "：為新角色建立空白設定檔。"u8,
+                IMPORT => "：新角色首次登入時匯入舊版資料。"u8,
+                ASK or _ => "：針對每個角色個別詢問是否匯入。"u8,
             };
 
             return Concat(part1, part2, part3);
@@ -168,10 +168,10 @@ internal sealed class CharacterManagementRenderer(
         {
             return characterHandlingMode switch
             {
-                ASK => "Ask"u8,
-                BLANK => "Create empty profile"u8,
-                IMPORT => "Import legacy data"u8,
-                _ => "Ask"u8,
+                ASK => "詢問"u8,
+                BLANK => "建立空白設定檔"u8,
+                IMPORT => "匯入舊版資料"u8,
+                _ => "詢問"u8,
             };
         }
     }
@@ -191,11 +191,11 @@ internal sealed class CharacterManagementRenderer(
     {
         if (_characterManager.Import(characterID))
         {
-            _windowManager.Confirm("Import", "Import successful!", "OK");
+            _windowManager.Confirm("匯入", "匯入成功！", "確定");
         }
         else
         {
-            _windowManager.Confirm("Import", "Import failed: Unable to access character config.", "OK");
+            _windowManager.Confirm("匯入", "匯入失敗：無法存取角色設定。", "確定");
         }
     }
 

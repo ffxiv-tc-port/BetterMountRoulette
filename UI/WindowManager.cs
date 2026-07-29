@@ -78,7 +78,7 @@ internal sealed class WindowManager(BetterMountRoulettePlugin plugin, PluginServ
 
     public void ConfirmYesNo(string title, string text, Action confirmed)
     {
-        Confirm(title, text, ("Yes", confirmed), "No");
+        Confirm(title, text, ("是", confirmed), "否");
     }
 
     public readonly struct ButtonConfig

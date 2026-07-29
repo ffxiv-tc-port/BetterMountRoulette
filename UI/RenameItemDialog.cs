@@ -30,13 +30,13 @@ internal sealed class RenameItemDialog(string title, string initialName, Action<
 
     public override void Draw()
     {
-        ImGui.Text("Name:"u8);
+        ImGui.Text("名稱："u8);
         ImGui.SameLine();
         _ = ImGui.InputText(""u8, ref _name, 1000);
         bool nameIsInvalid = !ValidateNameImpl();
 
         ImGui.BeginDisabled(nameIsInvalid);
-        if (ImGui.Button("Save"u8))
+        if (ImGui.Button("儲存"u8))
         {
             _onComplete(_name);
             IsOpen = false;
@@ -45,7 +45,7 @@ internal sealed class RenameItemDialog(string title, string initialName, Action<
         ImGui.EndDisabled();
 
         ImGui.SameLine();
-        if (ImGui.Button("Cancel"u8))
+        if (ImGui.Button("取消"u8))
         {
             IsOpen = false;
         }
@@ -62,10 +62,10 @@ internal sealed class RenameItemDialog(string title, string initialName, Action<
 
         string name = GetNormalizedName();
         return !AllowEmptyName && string.IsNullOrEmpty(name)
-            ? "Please provide a name."u8
+            ? "請輸入名稱。"u8
             : _getValidationErrors is { } getValidationErrors
             ? getValidationErrors(name)
-            : "Unknown validation error."u8;
+            : "未知的驗證錯誤。"u8;
     }
 
     private bool ValidateNameImpl()

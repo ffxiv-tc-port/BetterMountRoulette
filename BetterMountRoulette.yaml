@@ -1,9 +1,8 @@
 author: Nuffin
 name: Better Mount Roulette
-punchline: Choose which mounts show up in the mount roulette.
+punchline: 自訂坐騎隨機召喚會選到哪些坐騎。
 description: >
-  Allows any number of mounts to be enabled for the mount roulette, instead of having to choose between the
-  "up to 30" and "EVERYTHING" modes supported by the game.
+  可自由選擇任意數量的坐騎加入隨機召喚，不再受遊戲「最多 30 隻」或「全部」模式限制。
 internal_name: BetterMountRoulette
 ApplicableVersion: any
 tags:

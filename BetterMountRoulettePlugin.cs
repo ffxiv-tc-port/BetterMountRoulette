@@ -24,7 +24,7 @@ public sealed class BetterMountRoulettePlugin : IDalamudPlugin
     public const string MOUNT_COMMAND_TEXT = "/pmount";
 
     ////public const string CommandHelpMessage = $"Does all the things. Type \"{CommandText} help\" for more information.";
-    public const string COMMAND_HELP_MESSAGE = $"Open the config window.";
+    public const string COMMAND_HELP_MESSAGE = $"開啟設定視窗。";
 
     internal readonly Configuration Configuration;
 
@@ -82,7 +82,7 @@ public sealed class BetterMountRoulettePlugin : IDalamudPlugin
                 MOUNT_COMMAND_TEXT,
                 new CommandInfo(_actionHandler.HandleMountCommand)
                 {
-                    HelpMessage = "Mount a random mount from the specified group, e.g. \"/pmount My Group\" summons a mount from the \"My Group\" group"
+                    HelpMessage = "從指定群組隨機召喚坐騎，例如「/pmount My Group」會從「My Group」群組召喚坐騎"
                 });
         }
         catch
