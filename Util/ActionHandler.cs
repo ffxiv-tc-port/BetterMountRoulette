@@ -130,7 +130,7 @@ internal sealed class ActionHandler : IDisposable
 
         if (string.IsNullOrWhiteSpace(arguments))
         {
-            PrintError("Please specify a mount group");
+            PrintError("請指定坐騎群組");
             return;
         }
 
@@ -148,7 +148,7 @@ internal sealed class ActionHandler : IDisposable
             mountGroup = characterConfig.GetMountGroup(arguments);
             if (mountGroup == null)
             {
-                PrintError($"Mount group \"{arguments}\" not found.");
+            PrintError($"找不到坐騎群組「{arguments}」。");
                 return;
             }
         }
@@ -161,7 +161,7 @@ internal sealed class ActionHandler : IDisposable
         }
         else
         {
-            PrintError($"Unable to summon mount from group \"{arguments}\".");
+            PrintError($"無法從群組「{arguments}」召喚坐騎。");
         }
     }
 

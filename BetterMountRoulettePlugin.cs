@@ -177,7 +177,7 @@ public sealed class BetterMountRoulettePlugin : IDalamudPlugin
                 _services.PluginLog.Error($"Invalid command: {command} {arguments}");
                 if (!(CharacterConfig?.SuppressChatErrors ?? false))
                 {
-                    _services.Chat.PrintError($"Invalid command: {command} {arguments}");
+                    _services.Chat.PrintError($"無效的命令：{command} {arguments}");
                 }
             }
         }

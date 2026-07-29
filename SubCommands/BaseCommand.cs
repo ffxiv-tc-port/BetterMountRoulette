@@ -28,11 +28,11 @@ internal sealed class BaseCommand : SubCommandBase
     private string BuildHelpMessage()
     {
         StringBuilder sb = new StringBuilder()
-            .AppendLine("Usage:")
+            .AppendLine("用法：")
             .AppendLine(FullCommand)
-            .AppendLine("  -> opens the config window")
+            .AppendLine("  -> 開啟設定視窗")
             .Append(FullCommand).AppendLine(" help")
-            .Append("  -> prints this help");
+            .Append("  -> 顯示此說明");
 
         string[] modes = SubCommands.Keys.Where(x => !string.IsNullOrEmpty(x))
             .Select(x => x.ToLower(CultureInfo.CurrentCulture)).ToArray();
@@ -40,11 +40,11 @@ internal sealed class BaseCommand : SubCommandBase
         {
             _ = sb.AppendLine()
                 .Append(FullCommand).AppendLine(" <mode> [help]")
-                .AppendLine("  -> executes the selected mode. Available modes are: ")
+                .AppendLine("  -> 執行所選模式。可用模式：")
                 .Append("  -> ")
                 .AppendLine(string.Join(", ", modes))
-                .AppendLine("  -> if the help parameter is present, displays additional information about the selected mode instead")
-                .Append(CultureInfo.InvariantCulture, $"  -> e.g. {FullCommand} {modes[0]} help");
+                .AppendLine("  -> 若包含 help 參數，改為顯示所選模式的詳細資訊")
+                .Append(CultureInfo.InvariantCulture, $"  -> 例如：{FullCommand} {modes[0]} help");
         }
 
         return sb.ToString();
