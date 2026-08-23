@@ -25,7 +25,17 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
     {
         _services = services;
 
-        AgentInterface* agent = AgentModule.Instance()->GetAgentByInternalId(AgentId.MountNotebook);
+        // AgentModule.Instance() and the MountNotebook agent can both legitimately be null before the UI module
+        // has finished initializing. Dereferencing either would be an uncatchable AccessViolationException that
+        // crashes the whole game, so fail with a managed exception instead (the plugin reports it as a clean
+        // load error rather than taking the client down).
+        AgentModule* agentModule = AgentModule.Instance();
+        AgentInterface* agent = agentModule == null ? null : agentModule->GetAgentByInternalId(AgentId.MountNotebook);
+        if (agent == null || agent->VirtualTable == null)
+        {
+            throw new InvalidOperationException("MountNotebook agent is not available yet; cannot install roulette hooks.");
+        }
+
         var vtable = (AgentMountNoteBookVTable*)agent->VirtualTable;
         _agentMountNoteBookUseRouletteHook = services.GameInteropProvider.HookFromAddress<AgentMountNoteBookUseRouletteDetour>(
             vtable->UseRoulette,
