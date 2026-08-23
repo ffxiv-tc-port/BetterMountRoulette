@@ -11,6 +11,8 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
 {
     private bool _disposedValue;
     private readonly PluginServices _services;
+    private readonly nint _agentAddress;
+    private readonly nint _vtableAddress;
     private readonly Hook<AgentMountNoteBookUseRouletteDetour> _agentMountNoteBookUseRouletteHook;
     private readonly Hook<AgentMountNoteBookGetRouletteIconDetour> _agentMountNoteBookGetRouletteIconHook;
     private readonly Hook<AgentMountNoteBookGetRouletteActionIdDetour> _agentMountNoteBookGetRouletteActionIdHook;
@@ -37,6 +39,8 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
         }
 
         var vtable = (AgentMountNoteBookVTable*)agent->VirtualTable;
+        _agentAddress = (nint)agent;
+        _vtableAddress = (nint)vtable;
         _agentMountNoteBookUseRouletteHook = services.GameInteropProvider.HookFromAddress<AgentMountNoteBookUseRouletteDetour>(
             vtable->UseRoulette,
             OnUseRoulette);
@@ -57,6 +61,16 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
         _agentMountNoteBookGetRouletteIconHook.Enable();
         _agentMountNoteBookGetRouletteActionIdHook.Enable();
         _agentMountNoteBookIsRouletteAvailableHook.Enable();
+
+        // Information level (LogLevel 2 catches it) so the hardcoded vtable offsets can be verified on the live
+        // TC client: if an offset resolved to the wrong function, these addresses will not line up with the real
+        // MountNotebook agent vtable and the roulette-button behaviour will visibly misbehave.
+        _services.PluginLog.Information(
+            $"[飛行輪盤鈕] hook 掛載 agent=0x{_agentAddress:X} vtable=0x{_vtableAddress:X} " +
+            $"UseRoulette=0x{_agentMountNoteBookUseRouletteHook.Address:X} " +
+            $"IsRouletteAvailable=0x{_agentMountNoteBookIsRouletteAvailableHook.Address:X} " +
+            $"GetRouletteActionId=0x{_agentMountNoteBookGetRouletteActionIdHook.Address:X} " +
+            $"GetRouletteIcon=0x{_agentMountNoteBookGetRouletteIconHook.Address:X}");
     }
 
     internal void Disable()

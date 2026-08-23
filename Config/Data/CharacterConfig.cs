@@ -26,7 +26,11 @@ internal sealed class CharacterConfig
 
     public bool SuppressChatErrors { get; set; }
 
-    public bool EnableFlyingRouletteButton { get; set; } = true;
+    // Default OFF: enabling this installs 4 hooks at hardcoded MountNotebook agent vtable offsets that are not
+    // verified against the TC client. Per fleet redline (unproven assumption + hook timing = deployment gate),
+    // the vtable-touching feature must be opt-in so the default state cannot crash. Main feature (mount-group
+    // roulette via the UseAction hook) is unaffected and stays on.
+    public bool EnableFlyingRouletteButton { get; set; }
 
     [JsonIgnore]
     public bool HasNonDefaultGroups => Groups.Count > 1;

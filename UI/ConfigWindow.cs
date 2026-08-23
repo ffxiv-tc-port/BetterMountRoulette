@@ -156,6 +156,14 @@ internal sealed class ConfigWindow : Window
                 }
 
                 ImGui.Text("」視窗使用"u8);
+
+                ImGui.Separator();
+                ImGui.TextColored(
+                    new Vector4(1f, 0.75f, 0.2f, 1f),
+                    "實驗性功能，預設關閉：此按鈕依賴尚未在台服驗證的介面掛鉤位址。");
+                ImGui.TextColored(
+                    new Vector4(1f, 0.75f, 0.2f, 1f),
+                    "開啟後若坐騎導覽或輪盤按鈕行為異常，請關閉此選項並回報。");
                 ImGui.EndTooltip();
             }
 
