@@ -65,7 +65,7 @@ public sealed class BetterMountRoulettePlugin : IDalamudPlugin
             _services.Login += OnLogin;
             _ = _services.Framework.RunOnTick(() =>
             {
-                if (_services.ClientState.LocalPlayer is not null)
+                if (_services.ObjectTable.LocalPlayer is not null)
                 {
                     OnLogin(this, EventArgs.Empty);
                 }
@@ -140,9 +140,9 @@ public sealed class BetterMountRoulettePlugin : IDalamudPlugin
 
     private void OnLogin(object? sender, EventArgs e)
     {
-        if (_services.ClientState.LocalPlayer is { } player)
+        if (_services.ObjectTable.LocalPlayer is { } player)
         {
-            CharacterConfig = CharacterManager.GetCharacterConfig(_services.ClientState.LocalContentId, player);
+            CharacterConfig = CharacterManager.GetCharacterConfig(_services.PlayerState.ContentId, player);
             if (CharacterConfig.IsNew && Configuration.CharacterConfigs.ContainsKey(Configuration.DUMMY_LEGACY_CONFIG_ID))
             {
                 ImportCharacterConfig();

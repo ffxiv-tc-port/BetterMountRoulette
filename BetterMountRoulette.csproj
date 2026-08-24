@@ -25,9 +25,11 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <!-- CS0618: Dalamud 13 pin marks IClientState.LocalPlayer/LocalContentId obsolete (renamed, still functional).
-         This is a straight TC port, not an API modernization, so keep the existing calls and silence the warning. -->
-    <NoWarn>EnableGenerateDocumentationFile;CS0618</NoWarn>
+    <!-- CS0618 曾在這裡被靜音，因為 Dalamud 13 pin 把 IClientState.LocalPlayer /
+         LocalContentId 標為過時，而當時的移植不打算動 API。呼叫點已改用
+         IObjectTable.LocalPlayer 與 IPlayerState.ContentId，靜音不再需要，
+         移除後 TreatWarningsAsErrors 才能真的擋住新的過時呼叫。 -->
+    <NoWarn>EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -42,7 +44,7 @@
       CS1712: Type parameter 'type_parameter' has no matching typeparam tag in the XML comment on 'type_or_member' (but other type parameters do)
     -->
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn),1573,1591,1712,618</NoWarn>
+    <NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
