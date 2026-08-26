@@ -107,7 +107,7 @@ public sealed class PluginServices : IDisposable
 
     private void OnFrameworkUpdate(IFramework framework)
     {
-        if (ObjectTable.LocalPlayer is null)
+        if (!PlayerState.IsLoaded)
         {
             return;
         }
