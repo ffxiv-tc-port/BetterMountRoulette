@@ -11,6 +11,8 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
 {
     private bool _disposedValue;
     private readonly PluginServices _services;
+    private readonly nint _agentAddress;
+    private readonly nint _vtableAddress;
     private readonly Hook<AgentMountNoteBookUseRouletteDetour> _agentMountNoteBookUseRouletteHook;
     private readonly Hook<AgentMountNoteBookGetRouletteIconDetour> _agentMountNoteBookGetRouletteIconHook;
     private readonly Hook<AgentMountNoteBookGetRouletteActionIdDetour> _agentMountNoteBookGetRouletteActionIdHook;
@@ -25,8 +27,20 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
     {
         _services = services;
 
-        AgentInterface* agent = AgentModule.Instance()->GetAgentByInternalId(AgentId.MountNotebook);
+        // AgentModule.Instance() and the MountNotebook agent can both legitimately be null before the UI module
+        // has finished initializing. Dereferencing either would be an uncatchable AccessViolationException that
+        // crashes the whole game, so fail with a managed exception instead (the plugin reports it as a clean
+        // load error rather than taking the client down).
+        AgentModule* agentModule = AgentModule.Instance();
+        AgentInterface* agent = agentModule == null ? null : agentModule->GetAgentByInternalId(AgentId.MountNotebook);
+        if (agent == null || agent->VirtualTable == null)
+        {
+            throw new InvalidOperationException("MountNotebook agent is not available yet; cannot install roulette hooks.");
+        }
+
         var vtable = (AgentMountNoteBookVTable*)agent->VirtualTable;
+        _agentAddress = (nint)agent;
+        _vtableAddress = (nint)vtable;
         _agentMountNoteBookUseRouletteHook = services.GameInteropProvider.HookFromAddress<AgentMountNoteBookUseRouletteDetour>(
             vtable->UseRoulette,
             OnUseRoulette);
@@ -47,6 +61,16 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
         _agentMountNoteBookGetRouletteIconHook.Enable();
         _agentMountNoteBookGetRouletteActionIdHook.Enable();
         _agentMountNoteBookIsRouletteAvailableHook.Enable();
+
+        // Information level (LogLevel 2 catches it) so the hardcoded vtable offsets can be verified on the live
+        // TC client: if an offset resolved to the wrong function, these addresses will not line up with the real
+        // MountNotebook agent vtable and the roulette-button behaviour will visibly misbehave.
+        _services.PluginLog.Information(
+            $"[飛行輪盤鈕] hook 掛載 agent=0x{_agentAddress:X} vtable=0x{_vtableAddress:X} " +
+            $"UseRoulette=0x{_agentMountNoteBookUseRouletteHook.Address:X} " +
+            $"IsRouletteAvailable=0x{_agentMountNoteBookIsRouletteAvailableHook.Address:X} " +
+            $"GetRouletteActionId=0x{_agentMountNoteBookGetRouletteActionIdHook.Address:X} " +
+            $"GetRouletteIcon=0x{_agentMountNoteBookGetRouletteIconHook.Address:X}");
     }
 
     internal void Disable()

@@ -25,6 +25,10 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <!-- CS0618 曾在這裡被靜音，因為 Dalamud 13 pin 把 IClientState.LocalPlayer /
+         LocalContentId 標為過時，而當時的移植不打算動 API。呼叫點已改用
+         IObjectTable.LocalPlayer 與 IPlayerState.ContentId，靜音不再需要，
+         移除後 TreatWarningsAsErrors 才能真的擋住新的過時呼叫。 -->
     <NoWarn>EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
 
