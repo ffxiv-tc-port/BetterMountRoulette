@@ -62,7 +62,7 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
         _agentMountNoteBookGetRouletteActionIdHook.Enable();
         _agentMountNoteBookIsRouletteAvailableHook.Enable();
 
-        // Information level (LogLevel 2 catches it) so the hardcoded vtable offsets can be verified on the live
+        // Information level (the user's LogLevel is 1, so this is captured; Debug would be drowned by 100k+ lines) so the hardcoded vtable offsets can be verified on the live
         // TC client: if an offset resolved to the wrong function, these addresses will not line up with the real
         // MountNotebook agent vtable and the roulette-button behaviour will visibly misbehave.
         _services.PluginLog.Information(
