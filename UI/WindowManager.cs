@@ -133,7 +133,18 @@ internal sealed class WindowManager(BetterMountRoulettePlugin plugin, PluginServ
             }
 
             _windowsToRemove.Clear();
-            _windowsToRemove.AddRange(_windows.Windows.Where(x => !x.IsOpen));
+
+            // 每幀都跑：用索引走訪，不建迭代器，也不經介面取列舉器。
+            IReadOnlyList<Window> windows = _windows.Windows;
+            for (int i = 0; i < windows.Count; i++)
+            {
+                Window window = windows[i];
+                if (!window.IsOpen)
+                {
+                    _windowsToRemove.Add(window);
+                }
+            }
+
             _windows.Draw();
         }
 

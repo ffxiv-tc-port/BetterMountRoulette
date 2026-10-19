@@ -38,6 +38,12 @@ public sealed class PluginServices : IDisposable
     public IClientState ClientState { get; private set; } = null!;
 
     [PluginService]
+    public IObjectTable ObjectTable { get; private set; } = null!;
+
+    [PluginService]
+    public IPlayerState PlayerState { get; private set; } = null!;
+
+    [PluginService]
     public IFramework Framework { get; private set; } = null!;
 
     [PluginService]
@@ -101,7 +107,7 @@ public sealed class PluginServices : IDisposable
 
     private void OnFrameworkUpdate(IFramework framework)
     {
-        if (ClientState.LocalPlayer is null)
+        if (!PlayerState.IsLoaded)
         {
             return;
         }
@@ -119,7 +125,8 @@ public sealed class PluginServices : IDisposable
                 // TODO: dispose managed state (managed objects)
             }
 
-            GameFunctions.Dispose();
+            // null-conditional: the finalizer also runs for an instance whose constructor threw
+            GameFunctions?.Dispose();
             _disposedValue = true;
         }
     }

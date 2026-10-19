@@ -5,6 +5,9 @@ using BetterMountRoulette.Config.Data;
 using BetterMountRoulette.Util;
 
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 
 using System;
 using System.Collections.Generic;
@@ -16,6 +19,13 @@ internal sealed class MountGroupPage
     private readonly MountRenderer _mountRenderer;
     private string? _currentMountGroup;
     private MountGroupPageEnum _mode = MountGroupPageEnum.Settings;
+
+    // _rawNameFilter is the input buffer, _nameFilter the trimmed value actually used for
+    // filtering. Keeping them separate is what lets the user type a trailing space.
+    private string _rawNameFilter = "";
+    private string _nameFilter = "";
+    private List<MountData>? _filteredMounts;
+    private (int UnlockedCount, string Text) _lastFilter;
 
     private enum MountGroupPageEnum
     {
@@ -69,10 +79,21 @@ internal sealed class MountGroupPage
         {
             ImGui.EndDisabled();
             isMountsOpen = true;
-            int pages = MountRenderer.GetPageCount(_plugin.MountRegistry.UnlockedMountCount);
+
+            if (unlockedMounts.Count > 0)
+            {
+                DrawNameFilter();
+            }
+
+            List<MountData> filteredAndUnlockedMounts = ApplyFilterAndGetFilteredMounts(unlockedMounts);
+
+            int pages = MountRenderer.GetPageCount(filteredAndUnlockedMounts.Count);
             if (pages == 0)
             {
-                ImGui.Text("請至少解鎖一隻坐騎。"u8);
+                ImGui.Text(
+                    unlockedMounts.Count == 0
+                        ? "請至少解鎖一隻坐騎。"u8
+                        : "沒有符合篩選條件的坐騎。"u8);
             }
             else if (ImGui.BeginTabBar("mount_pages"u8))
             {
@@ -80,7 +101,7 @@ internal sealed class MountGroupPage
                 {
                     if (ImGui.BeginTabItem(StringCache.Pages[page , () => $"{page}" ]))
                     {
-                        RenderMountListPage(page, group, unlockedMounts);
+                        RenderMountListPage(page, group, filteredAndUnlockedMounts);
                         ImGui.EndTabItem();
                     }
                 }
@@ -112,11 +133,49 @@ internal sealed class MountGroupPage
         }
     }
 
-    private void RenderMountListPage(int page, MountGroup group, List<MountData> unlockedMounts)
+    private void DrawNameFilter()
     {
-        _mountRenderer.RenderPage(unlockedMounts, group, page);
+        ImGui.SetNextItemWidth(ImGuiHelpers.GlobalScale * 250);
+        if (ImGui.InputTextWithHint("###nameFilter"u8, "搜尋名稱…"u8, ref _rawNameFilter, 100))
+        {
+            _nameFilter = _rawNameFilter.Trim();
+        }
 
-        int currentPage = page;
+        ImGui.SameLine();
+        if (ImGuiComponents.IconButton(FontAwesomeIcon.FilterCircleXmark))
+        {
+            _rawNameFilter = "";
+            _nameFilter = "";
+        }
+
+        ControlHelper.Tooltip("清除名稱篩選"u8);
+    }
+
+    private List<MountData> ApplyFilterAndGetFilteredMounts(List<MountData> unlockedMounts)
+    {
+        if (string.IsNullOrEmpty(_nameFilter))
+        {
+            return unlockedMounts;
+        }
+
+        if (_filteredMounts is null
+            || unlockedMounts.Count != _lastFilter.UnlockedCount
+            || !_nameFilter.Equals(_lastFilter.Text, StringComparison.OrdinalIgnoreCase))
+        {
+            _filteredMounts = unlockedMounts
+                .Where(mountData => mountData.Name.ExtractText().Contains(_nameFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        _lastFilter = (UnlockedCount: unlockedMounts.Count, Text: _nameFilter);
+
+        return _filteredMounts;
+    }
+
+    private void RenderMountListPage(int page, MountGroup group, List<MountData> unlockedAndFilteredMounts)
+    {
+        _mountRenderer.RenderPage(unlockedAndFilteredMounts, group, page);
+
         (bool Select, int? Page)? maybeInfo = null;
 
         Button("全部選取"u8, ref maybeInfo, (true, null));
@@ -132,8 +191,12 @@ internal sealed class MountGroupPage
             string selectText = info.Select ? "選取" : "取消選取";
             string pageInfo = (info.Page, info.Select) switch
             {
-                (null, true) => "目前未選取的坐騎",
-                (null, false) => "目前已選取的坐騎",
+                (null, true) => string.IsNullOrEmpty(_nameFilter)
+                    ? "目前未選取的坐騎"
+                    : $"符合「{_nameFilter}」的坐騎",
+                (null, false) => string.IsNullOrEmpty(_nameFilter)
+                    ? "目前已選取的坐騎"
+                    : $"符合「{_nameFilter}」的坐騎",
                 _ => "目前頁面上的坐騎",
             };
 
@@ -141,7 +204,7 @@ internal sealed class MountGroupPage
                 "確定嗎？",
                 $"確定要{selectText}所有{pageInfo}嗎？",
                 () => MountRenderer.Update(
-                    _plugin.MountRegistry.GetUnlockedMounts(),
+                    unlockedAndFilteredMounts,
                     group,
                     info.Select,
                     info.Page));

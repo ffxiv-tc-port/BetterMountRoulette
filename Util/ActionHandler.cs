@@ -32,7 +32,9 @@ internal sealed class ActionHandler : IDisposable
         void* renderAddress = ActionManager.MemberFunctionPointers.UseAction;
         if (renderAddress is null)
         {
-            _services.PluginLog.Debug("Unable to load UseAction address");
+            _services.PluginLog.Warning(
+                "[改版防護] 取不到「使用技能」的遊戲函式位址：坐騎隨機不會改成從自訂群組挑選"
+                + "（遊戲原本的坐騎隨機照常），/pmount 也無法召喚。");
             return;
         }
 
@@ -151,6 +153,12 @@ internal sealed class ActionHandler : IDisposable
             PrintError($"找不到坐騎群組「{arguments}」。");
                 return;
             }
+        }
+
+        if (ActionManager.MemberFunctionPointers.UseAction is null)
+        {
+            PrintError("遊戲改版後找不到「使用技能」的遊戲函式，暫時無法用 /pmount 召喚坐騎。");
+            return;
         }
 
         uint mount = _mountRegistry.GetRandom(ActionManager.Instance(), mountGroup);

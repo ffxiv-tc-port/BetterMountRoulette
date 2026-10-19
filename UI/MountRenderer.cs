@@ -21,8 +21,11 @@ internal sealed class MountRenderer(PluginServices services)
     public void RenderPage(List<MountData> mounts, MountGroup group, int page)
     {
         int i = 0;
-        foreach (MountData mount in mounts.Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE))
+        int start = Math.Max(0, (page - 1) * PAGE_SIZE);
+        int end = Math.Min(mounts.Count, start + PAGE_SIZE);
+        for (int index = start; index < end; index++)
         {
+            MountData mount = mounts[index];
             if (i++ > 0)
             {
                 ImGui.SameLine();

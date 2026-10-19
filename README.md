@@ -1,20 +1,34 @@
 # BetterMountRoulette
-Better mount roulette plugin for FFXIV
 
-Allows for a more granular approach to selecting the mounts you want included in your mount roulette instead of the very binary "up to 30" and "EVERYTHING!!!!" options the game gives us.
+[CMDRNuffin/BetterMountRoulette](https://github.com/CMDRNuffin/BetterMountRoulette) 的台服移植版。
+坐騎輪盤細部設定插件：取代遊戲內建的「勾選最多 30 隻」與「全選」兩種
+二選一設定，改用群組方式精細控制輪盤召喚哪些坐騎。
 
-## Known Bugs
-None currently. Yay.
+## 功能
 
-## Roadmap
-Things I intend to implement at some point in the future. Before posting a feature request, please make sure it's not already listed here:
+- **坐騎分組**：可建立多組坐騎清單，各自指定要納入的坐騎，並可搜尋坐騎
+  名稱快速勾選。
+- **群組指派**：可分別指定一般坐騎輪盤與飛行坐騎輪盤要使用哪個群組。
+- **依角色設定**：每個角色可有獨立設定，並可從其他角色匯入設定。
+- **多人坐騎控制**：可依群組設定「組隊時只使用多人坐騎」、「優先使用可搭載
+  較多隊員的坐騎」、「單人時只使用單人坐騎」，並可為 PvP 另外設定一套規則。
+- **新坐騎自動納入**：新取得的坐騎可設定自動加入群組。
+- **地面速度最快的坐騎**：在坐騎速度還沒強化、也還不能飛的區域，限制只召喚
+  地面速度最快的坐騎（可設定成即使能飛也一律如此）。
+- **`/pmount` 指令召喚**：可直接指令指定群組召喚坐騎，不透過輪盤按鈕。
+- **重新啟用「飛行坐騎隨機召喚」按鈕**（實驗性，預設關閉）：讓「技能選單」與
+  「坐騎一覽」視窗重新出現這個按鈕。
 
-- Group mounts to treat as a single mount. Got 85 different flavours of "horse" but only the company chocobo otherwise? Put the horses in a group and treat it as a single mount for a 50/50 chance of getting "a random horse" or the chocobo.
-- Summon criteria
-  - Summon mount with specified number of seats (to move the whole party). (currently being worked on)
-  - Summon mount with/without custom BGM.
-  - Summon fastest mount (i.e. SDS Fenrir if owned and riding map not unlocked, random otherwise)
-  - Maybe more
-- Search function for the settings, so you can finally disable that one eyesore of a mount you just can't seem to find without it.
-- Customizable rarities (for when you like some mounts less than others, but not enough to disable them outright)
-- A way to get the Flying Mount Roulette back if you deleted it from your hotbar (or never got it in the first place because you started late, like me)
+## 指令
+
+- `/pbmr`：開啟設定視窗。
+- `/pmount <群組名稱>`：從指定群組隨機召喚坐騎，例如
+  `/pmount My Group` 會從「My Group」群組召喚坐騎。
+
+## 台服版的修改
+
+- 坐騎群組頁的名稱搜尋框（清單與整批選取都只作用於篩選結果）
+- 遊戲改版後有特徵碼對不上時，插件照常載入、只停掉對應的那一項並在記錄檔寫明
+- 介面繁體中文化
+
+原作者：[CMDRNuffin](https://github.com/CMDRNuffin)

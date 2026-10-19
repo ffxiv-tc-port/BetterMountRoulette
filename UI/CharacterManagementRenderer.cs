@@ -54,7 +54,7 @@ internal sealed class CharacterManagementRenderer(
         }
 
         ImGui.EndListBox();
-        ImGui.BeginDisabled(_currentCharacter is null || _currentCharacter == _services.ClientState.LocalContentId);
+        ImGui.BeginDisabled(_currentCharacter is null || _currentCharacter == _services.PlayerState.ContentId);
 
         if (ImGui.Button("匯入"))
         {
@@ -86,7 +86,7 @@ internal sealed class CharacterManagementRenderer(
             ImGui.SameLine();
             ImGui.Text("此設定無法刪除。"u8);
         }
-        else if (_currentCharacter == _services.ClientState.LocalContentId)
+        else if (_currentCharacter == _services.PlayerState.ContentId)
         {
             ImGui.SameLine();
             ImGui.Text("無法從目前使用中的角色匯入或刪除設定。"u8);

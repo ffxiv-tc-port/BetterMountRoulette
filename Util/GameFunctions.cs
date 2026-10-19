@@ -41,29 +41,47 @@ internal sealed class GameFunctions : IDisposable
     // for ( i = 1; i < 0x2B; ++i )
     // {
     //     GeneralActionRow_1 = Component::Exd::ExdModule_GetGeneralActionRow_1(i);
-    [Signature("84 D2 0F 84 ?? ?? ?? ?? 4C 8B DC 41 56 48 81 EC 70 01 00 00", Fallibility = Fallibility.Infallible)]
+    // Fallible: stays null when the signature no longer matches. Every call site must check for null first
+    // (calling a null function pointer is an uncatchable AccessViolationException).
+    [Signature("84 D2 0F 84 ?? ?? ?? ?? 4C 8B DC 41 56 48 81 EC 70 01 00 00", Fallibility = Fallibility.Fallible)]
     private readonly unsafe delegate* unmanaged<AgentActionMenu*, bool, void> _agentActionMenuLoadActions;
 
     // For finding it in the future:
     // ActionManager.UseAction -> ActionManager.UseActionLocation
     // -> sub_DEADBEEF(this, some_game_object, actionType, actionId, spellId, extraParam, .../* in call, not definition */)
     // sub_DEADBEEF: if(!inIdleCam && !inGPose && gameMain.instance.(some_field & 0x40000000 == 0 || byte4(some_other_field) >= 0x40u)) ...
-    [Signature("E8 ?? ?? ?? ?? 41 83 FC 04 0F 84 ?? ?? ?? ?? 41 81 FC 5D 4E 00 00", Fallibility = Fallibility.Infallible)]
-    private readonly Hook<ActionManagerInitializeCastBarDetour> _actionManagerInitializeCastbarHook;
+    // Fallible: null when the signature no longer matches; only the cast bar display override is lost.
+    [Signature("E8 ?? ?? ?? ?? 41 83 FC 04 0F 84 ?? ?? ?? ?? 41 81 FC 5D 4E 00 00", Fallibility = Fallibility.Fallible)]
+    private readonly Hook<ActionManagerInitializeCastBarDetour>? _actionManagerInitializeCastbarHook;
 
     private readonly AgentMountNoteBookHooks _agentMountNoteBookHooks;
 
     private unsafe delegate void AgentActionMenuLoadActionsDetour(AgentActionMenu* @this, bool reload);
-    private unsafe delegate void ActionManagerInitializeCastBarDetour(ActionManager* @this, BattleChara* chara, ActionType actionType, uint actionId, uint spellId, int mountRouletteIndex);
+    // castTimeElapsed/castTimeTotal: callers pass ActionManager.CastTimeElapsed/CastTimeTotal; the native forwards them to the cast bar.
+    private unsafe delegate void ActionManagerInitializeCastBarDetour(ActionManager* @this, BattleChara* chara, ActionType actionType, uint actionId, uint spellId, int mountRouletteIndex, float castTimeElapsed, float castTimeTotal);
 
     public unsafe GameFunctions(PluginServices services)
     {
         _services = services;
         _agentActionMenuLoadActions = null;
-        _actionManagerInitializeCastbarHook = null!;
+        _actionManagerInitializeCastbarHook = null;
         services.GameInteropProvider.InitializeFromAttributes(this);
 
-        _actionManagerInitializeCastbarHook.Enable();
+        if (_agentActionMenuLoadActions == null)
+        {
+            services.PluginLog.Warning(
+                "[改版防護] 找不到「刷新技能清單」的遊戲函式（特徵碼對不上）："
+                + "開關飛行坐騎隨機按鈕後「技能與特性」視窗不會立即更新，其餘功能不受影響。");
+        }
+
+        if (_actionManagerInitializeCastbarHook is null)
+        {
+            services.PluginLog.Warning(
+                "[改版防護] 找不到「施放條初始化」的遊戲函式（特徵碼對不上）："
+                + "召喚坐騎時施放條的顯示不再改寫（會直接顯示坐騎名稱），挑選坐騎的功能不受影響。");
+        }
+
+        _actionManagerInitializeCastbarHook?.Enable();
 
         UpdateActionMenu();
 
@@ -125,7 +143,7 @@ internal sealed class GameFunctions : IDisposable
         return (maxSpeed, currentSpeed);
     }
 
-    private unsafe void OnActionManagerInitializeCastBar(ActionManager* @this, BattleChara* chara, ActionType actionType, uint actionId, uint spellId, int mountRouletteIndex)
+    private unsafe void OnActionManagerInitializeCastBar(ActionManager* @this, BattleChara* chara, ActionType actionType, uint actionId, uint spellId, int mountRouletteIndex, float castTimeElapsed, float castTimeTotal)
     {
         if (chara == Control.GetLocalPlayer()) /* don't bork other players' cast bars */
         {
@@ -137,11 +155,17 @@ internal sealed class GameFunctions : IDisposable
             }
         }
 
-        _actionManagerInitializeCastbarHook.Original(@this, chara, actionType, actionId, spellId, mountRouletteIndex);
+        // only ever invoked through the hook, so the hook exists here
+        _actionManagerInitializeCastbarHook!.Original(@this, chara, actionType, actionId, spellId, mountRouletteIndex, castTimeElapsed, castTimeTotal);
     }
 
     private unsafe void UpdateActionMenu()
     {
+        if (_agentActionMenuLoadActions == null)
+        {
+            return;
+        }
+
         if (_services.ClientState.IsLoggedIn)
         {
             AgentActionMenu* agentActionMenu = AgentModule.Instance()->GetAgentActionMenu();
@@ -165,8 +189,9 @@ internal sealed class GameFunctions : IDisposable
             // discard the task. we don't care about waiting
             _ = _services.Framework.RunOnFrameworkThread(() => ToggleFlyingRouletteButton(false));
 
-            _agentMountNoteBookHooks.Dispose();
-            _actionManagerInitializeCastbarHook.Dispose();
+            // null-conditional: the finalizer also runs for an instance whose constructor threw
+            _agentMountNoteBookHooks?.Dispose();
+            _actionManagerInitializeCastbarHook?.Dispose();
 
             _disposedValue = true;
         }
