@@ -200,9 +200,10 @@ internal sealed class ConfigWindow : Window
 
                 ImGui.EndTable();
             }
-
-            ImGui.EndChildFrame();
         }
+
+        // 不論 BeginChildFrame 回傳什麼都必須呼叫（子視窗被裁掉時回 false）
+        ImGui.EndChildFrame();
     }
 
     private static ReadOnlySpan<byte> RouletteGroupID(bool isFlying)
