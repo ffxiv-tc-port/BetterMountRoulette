@@ -36,7 +36,7 @@ internal sealed class MountRenderer(PluginServices services)
                 i = 0;
             }
 
-            bool enabled = group.IncludedMounts.Contains(mount.ID) == group.IncludedMeansActive;
+            bool enabled = IsSelected(group, mount.ID);
             enabled = Render(mount, enabled);
             _ = enabled == group.IncludedMeansActive
                 ? group.IncludedMounts.Add(mount.ID)
@@ -62,6 +62,11 @@ internal sealed class MountRenderer(PluginServices services)
         {
             _ = selectOperation(mount.ID);
         }
+    }
+
+    public static bool IsSelected(MountGroup group, uint mountID)
+    {
+        return group.IncludedMounts.Contains(mountID) == group.IncludedMeansActive;
     }
 
     public static int GetPageCount(int mountCount)

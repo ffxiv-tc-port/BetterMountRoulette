@@ -27,10 +27,20 @@ internal sealed class MountGroupPage
     private List<MountData>? _filteredMounts;
     private (int UnlockedCount, string Text) _lastFilter;
 
+    // Runtime-only UI state; never written to the config file.
+    private SelectionFilter _selectionFilter = SelectionFilter.All;
+
     private enum MountGroupPageEnum
     {
         Settings,
         Mounts
+    }
+
+    private enum SelectionFilter
+    {
+        All,
+        Selected,
+        Unselected,
     }
 
     internal MountGroupPage(BetterMountRoulettePlugin plugin, PluginServices services)
@@ -83,9 +93,13 @@ internal sealed class MountGroupPage
             if (unlockedMounts.Count > 0)
             {
                 DrawNameFilter();
+                ImGui.SameLine();
+                DrawSelectionFilter();
             }
 
-            List<MountData> filteredAndUnlockedMounts = ApplyFilterAndGetFilteredMounts(unlockedMounts);
+            List<MountData> filteredAndUnlockedMounts = ApplySelectionFilter(
+                ApplyFilterAndGetFilteredMounts(unlockedMounts),
+                group);
 
             int pages = MountRenderer.GetPageCount(filteredAndUnlockedMounts.Count);
             if (pages == 0)
@@ -151,6 +165,61 @@ internal sealed class MountGroupPage
         ControlHelper.Tooltip("清除名稱篩選"u8);
     }
 
+    private void DrawSelectionFilter()
+    {
+        ImGui.SetNextItemWidth(ImGuiHelpers.GlobalScale * 100);
+        if (ImGui.BeginCombo("##selectionFilter"u8, SelectionFilterText(_selectionFilter)))
+        {
+            ComboItem(SelectionFilter.All, ref _selectionFilter);
+            ComboItem(SelectionFilter.Selected, ref _selectionFilter);
+            ComboItem(SelectionFilter.Unselected, ref _selectionFilter);
+
+            ImGui.EndCombo();
+        }
+
+        ControlHelper.Tooltip("依是否已選取篩選坐騎"u8);
+
+        static void ComboItem(SelectionFilter value, ref SelectionFilter selectedValue)
+        {
+            if (ImGui.Selectable(SelectionFilterText(value), value == selectedValue))
+            {
+                selectedValue = value;
+            }
+        }
+
+        static ReadOnlySpan<byte> SelectionFilterText(SelectionFilter filter)
+        {
+            return filter switch
+            {
+                SelectionFilter.Selected => "已選取"u8,
+                SelectionFilter.Unselected => "未選取"u8,
+                _ => "全部"u8,
+            };
+        }
+    }
+
+    // Deliberately uncached: selection changes on every click, and the confirm dialog
+    // captures the returned list, so it must never be mutated after being handed out.
+    private List<MountData> ApplySelectionFilter(List<MountData> mounts, MountGroup group)
+    {
+        if (_selectionFilter == SelectionFilter.All)
+        {
+            return mounts;
+        }
+
+        bool wantSelected = _selectionFilter == SelectionFilter.Selected;
+        List<MountData> result = new(mounts.Count);
+        foreach (MountData mount in mounts)
+        {
+            if (MountRenderer.IsSelected(group, mount.ID) == wantSelected)
+            {
+                result.Add(mount);
+            }
+        }
+
+        return result;
+    }
+
     private List<MountData> ApplyFilterAndGetFilteredMounts(List<MountData> unlockedMounts)
     {
         if (string.IsNullOrEmpty(_nameFilter))
@@ -191,6 +260,7 @@ internal sealed class MountGroupPage
             string selectText = info.Select ? "選取" : "取消選取";
             string pageInfo = (info.Page, info.Select) switch
             {
+                (null, _) when _selectionFilter != SelectionFilter.All => DescribeActiveFilters(),
                 (null, true) => string.IsNullOrEmpty(_nameFilter)
                     ? "目前未選取的坐騎"
                     : $"符合「{_nameFilter}」的坐騎",
@@ -208,6 +278,14 @@ internal sealed class MountGroupPage
                     group,
                     info.Select,
                     info.Page));
+        }
+
+        string DescribeActiveFilters()
+        {
+            string selection = _selectionFilter == SelectionFilter.Selected ? "目前已選取" : "目前未選取";
+            return string.IsNullOrEmpty(_nameFilter)
+                ? $"{selection}的坐騎"
+                : $"符合「{_nameFilter}」且{selection}的坐騎";
         }
 
         static void Button(ReadOnlySpan<byte> label, ref (bool, int?)? maybeInfo, (bool, int?) value)
