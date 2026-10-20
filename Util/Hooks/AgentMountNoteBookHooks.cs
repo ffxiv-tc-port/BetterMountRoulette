@@ -138,10 +138,28 @@ internal sealed class AgentMountNoteBookHooks : IDisposable
     private unsafe bool OnUseRoulette(AgentInterface* @this, uint rouletteIndex)
     {
         _services.PluginLog.Debug($"OnUseRoulette(this, {rouletteIndex})");
-        return rouletteIndex == 1
-            ? ActionManager.Instance()->UseAction(ActionType.GeneralAction, 24)
-            : _agentMountNoteBookUseRouletteHook!.Original(@this, rouletteIndex);
+        if (rouletteIndex != 1)
+        {
+            return _agentMountNoteBookUseRouletteHook!.Original(@this, rouletteIndex);
+        }
+
+        // 第二格是插件自己加的飛行坐騎隨機，遊戲沒有對應的原函式可交還（從來不呼叫原函式）。
+        // 位址解不出時呼叫會擲例外並穿回原生框架（＝遊戲崩潰），所以先判、不成立就什麼都不做並提示一次。
+        if (ActionManager.Addresses.Instance.Value == 0 || ActionManager.MemberFunctionPointers.UseAction is null)
+        {
+            DetourGuard.ReportOnce(
+                _services,
+                ref _flyingRouletteUnavailableReported,
+                "[改版防護] ActionManager 或「使用技能」的遊戲位址解不出：坐騎圖鑑裡的飛行坐騎隨機按鈕暫停。",
+                "坐騎圖鑑裡的飛行坐騎隨機按鈕暫停（按了不會有反應），其餘功能照常。",
+                null);
+            return false;
+        }
+
+        return ActionManager.Instance()->UseAction(ActionType.GeneralAction, 24);
     }
+
+    private int _flyingRouletteUnavailableReported;
 
     private void Dispose(bool disposing)
     {
