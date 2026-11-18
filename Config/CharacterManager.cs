@@ -112,7 +112,7 @@ internal sealed class CharacterManager(PluginServices services, Configuration co
         string dir = GetCharConfigDir();
         _ = Directory.CreateDirectory(dir);
 
-        File.WriteAllText(Path.Combine(dir, entry.FileName), JsonConvert.SerializeObject(config));
+        _ = ConfigFileSafety.Save(Path.Combine(dir, entry.FileName), JsonConvert.SerializeObject(config), PluginLog);
     }
 
     private CharacterConfig? LoadCharacterConfig(ulong playerID)
@@ -198,7 +198,18 @@ internal sealed class CharacterManager(PluginServices services, Configuration co
             {
                 try
                 {
-                    return JsonConvert.DeserializeObject<CharacterConfig>(File.ReadAllText(path));
+                    CharacterConfig? config = JsonConvert.DeserializeObject<CharacterConfig>(File.ReadAllText(path));
+                    if (config is null)
+                    {
+                        // Newtonsoft 對空白／全 NUL 回 null、不擲例外；GetCharacterConfig 會當成新角色並立刻存預設值。
+                        _ = ConfigFileSafety.BackupUnreadable(
+                            path,
+                            "內容是空的或無法辨識，讀不到這個角色的設定",
+                            "若是目前登入的角色，接著會改用預設設定並存檔，檔名相同就整份覆寫原檔。",
+                            PluginLog);
+                    }
+
+                    return config;
                 }
                 catch (IOException /* file deleted in the meantime. shouldn't happen, but technically can */)
                 {
