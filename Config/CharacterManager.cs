@@ -211,8 +211,18 @@ internal sealed class CharacterManager(PluginServices services, Configuration co
 
                     return config;
                 }
-                catch (IOException /* file deleted in the meantime. shouldn't happen, but technically can */)
+                catch (IOException e /* file deleted in the meantime. shouldn't happen, but technically can */)
                 {
+                    // 回 null ⇒ GetCharacterConfig 會當成新角色、立刻存預設值；檔還在就先備份，不在就只記錄。
+                    const string consequence = "若是目前登入的角色，接著會改用預設設定並存檔，檔名相同就整份覆寫原檔。";
+                    if (File.Exists(path))
+                    {
+                        _ = ConfigFileSafety.BackupUnreadable(path, $"讀取失敗（{e.GetType().Name}: {e.Message}），讀不到這個角色的設定", consequence, PluginLog);
+                    }
+                    else
+                    {
+                        PluginLog.Information("[設定] {File}：讀取失敗（{Type}: {Error}），檔案已不在，沒有東西可備份。{Consequence}", cce.FileName, e.GetType().Name, e.Message, consequence);
+                    }
                 }
             }
         }
