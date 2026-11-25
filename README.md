@@ -31,4 +31,10 @@
 - 遊戲改版後有特徵碼對不上時，插件照常載入、只停掉對應的那一項並在記錄檔寫明
 - 介面繁體中文化
 
+## 安裝
+
+`/xlsettings` 開「Dalamud 設定」→「試驗性功能」→「第三方插件倉庫」，加入 `https://raw.githubusercontent.com/ffxiv-tc-port/DalamudPluginsTC/main/repo.json` 並啟用、儲存，再到「插件管理員」（`/xlplugins`）安裝；同一個插件只裝這裡的版本，不要同時裝上游版。
+
 原作者：[CMDRNuffin](https://github.com/CMDRNuffin)
+
+授權：上游未附授權。
